@@ -1,0 +1,50 @@
+body {
+	background-color: #115B7F;
+}
+
+#census-dashboard {
+	margin: auto auto;
+	background-color: white;
+	padding-left: 3rem;
+	padding-right: 3rem;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
+	border-radius: 3px;
+	box-shadow: rgb(38, 57, 77) 0px 20px 30px -10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: fit-content;
+}
+.site-header, .site-footer {
+	display: flex;
+	align-items: center;
+	flex-direction:column;
+}
+
+.site-footer {
+	margin-top: 1rem;
+}
+
+.site-image-header-container {
+	background-color: white;
+	padding: 1rem;
+	border-radius: 3px;
+}
+
+.census-dashboard-background {
+	position: absolute;
+	z-index: -1;
+	top: 15%;
+}
+.census-header {
+	color: white;
+}
+
+#refresh-button {
+	margin-top: .5rem;
+}
+
+#census-dashboard table {
+	min-width:1000px;
+}

@@ -1,0 +1,83 @@
+﻿body {
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+h3 {
+	vertical-align: top;
+	margin-top: 15px !important;
+	margin-right: 15px !important;
+	display: inline-block;
+}
+
+.alert {
+	border-bottom: gray solid 1px;
+	display: block;
+}
+
+.content {
+	width: 85%;
+	width: 85%;
+	margin: auto auto;
+}
+
+.largeText {
+	font-size: 1.1rem;
+}
+
+.errorColor {
+	color: #c70000;
+	font-weight: bold;
+}
+
+.warningColor {
+	color: #ffba00;
+	font-weight: bold;
+}
+
+.goodColor {
+	color: #69B261;
+	font-weight: bold;
+}
+
+.completed {
+	color: #69B261;
+}
+
+.important {
+	font-weight: bold;
+}
+
+.rightAlign {
+	text-align: right;
+}
+
+.centerAlign {
+	text-align: center;
+}
+
+.tableCell {
+	padding-bottom: 15px;
+}
+
+td, th {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+th {
+	cursor: pointer;
+}
+
+.hidden {
+	display: none;
+}
+
+.selects {
+	position: fixed;
+	right: 20px;
+	top: 40px;
+}
+
+.footer, .header {
+	color: rgba(128,128,128,.6);
+}

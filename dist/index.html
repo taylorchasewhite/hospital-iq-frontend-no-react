@@ -1,0 +1,38 @@
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+	<script src="https://d3js.org/d3.v4.min.js" type="text/javascript"></script>
+	<script async src="main.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+	<link href="/src/css/tabular.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css"
+		  integrity="sha384-HzLeBuhoNPvSl5KYnjx0BT+WB0QEEqLprO+NBkkk5gbc67FTaL7XIGa2w1L0Xbgc" crossorigin="anonymous" />
+	<link href="/src/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+	<link href="/src/css/census-board.css" rel="stylesheet">
+</head>
+<body>
+	<div class="census-dashboard-background">
+		<video playsinline="true" width="100%" style="object-fit: cover;" autoplay="true" muted="true" loop="true" preload="auto"><source src="https://www.hospiq.com/wp-content/uploads/2021/05/540_arc_reactor_hero.mp4" type="video/mp4">Sorry, your browser doesn't support embedded videos.</video>
+	</div>
+	<div class="site-header">
+		<h2 class="census-header">Census Dashboard</h2>
+	</div>
+	<div id="census-dashboard">
+		<div id="census-dashboard-table-container"></div>
+		<div id="census-last-updated" class="text-muted"></div>
+		<div class="refresh-container">
+			<button id="refresh-button" class="btn btn-primary" onclick="window.initializeCensus()">
+				<i class="fas fa-sync"></i> Refresh
+			</button>
+		</div>
+	</div>
+	<div class="site-footer">
+		<a href="https://www.hospiq.com/" target="_blank">
+			<div class="site-image-header-container">
+				<img id="site-image" src="/dist/HospitalIQ-LOGO-small.png" />
+			</div>
+		</a>
+	</div>
+</body>
+</html>
