@@ -14,9 +14,7 @@ function createGenericTable(sourceData, options) {
 	var table;
 	options = defaultOptions(options);
 
-	d3.json(sourceData, function (error, data) {
-		createGenericTableInner(error, data);
-	});
+	d3.json(sourceData, createGenericTableInner);
 
 	function createGenericTableInner(error, data) {
 		if (error)
@@ -40,6 +38,10 @@ function createGenericTable(sourceData, options) {
 	}
 }
 
+/**
+ * Setup default options if none are passed.
+ * @param {any} options The consumer provided objects array.
+ */
 function defaultOptions(options) {
 	options ??= {};
 	options.targetTableElement ??= "body";
@@ -47,42 +49,44 @@ function defaultOptions(options) {
 }
 
 /**
- * Called if you already have the json data loaded from D3.
+ * Get title columns that are not hidden or threshold columns based on the options object.
+ * @param {any} titleColumns The raw titles supplied via the JSON payload.
+ * @param {any} options The options object provided by the consumer.
+ */
+function filterTitleColumns(titleColumns, options) {
+	return titleColumns.filter(function (columnName) {
+		return (options.thresholdCols.high !== columnName &&
+			options.thresholdCols.low !== columnName &&
+			!options.hiddenCols.includes(columnName));
+	});
+}
+
+/**
+ * Called once we have the json data loaded.
  * @public
  * 
- * @param {Object} data 
+ * @param {Object} data - the array of json data fetched from the endpoint.
  * @param {Object} options - Options object: 
  *		columns - {Array} Optional, needed if the data passed in does not have a row of header names
- * @returns 
+ * @returns the table html element.
  */
-function tabulate(data, options, columns) {
-	columns = options.columns;
+function tabulate(data, options) {
 	var sortAscending = true;
 	var container = d3.select(options.targetTableElement);
+
 	container.selectAll("table").remove();
+
 	var table = container.append("table"),
 		thead = table.append("thead"),
 		tbody = table.append("tbody");
 	var titleColumns, displayTitles;
 	titleColumns = d3.keys(data[0]);
-	titleColumns = titleColumns.filter(function (columnName) {
-		return (options.thresholdCols.high !== columnName &&
-			options.thresholdCols.low !== columnName &&
-			!options.hiddenCols.includes(columnName));
-	});
+	titleColumns = filterTitleColumns(titleColumns, options);
 
-	if (!columns) {
+	if (!options.columns)
 		displayTitles = titleColumns;
-	}
-	else {
-		displayTitles = columns;
-	}
-
-	for (var i = displayTitles.length - 1; i >= 0; i--) {
-		if (displayTitles[i].indexOf("_") === 0) {
-			displayTitles.splice(i, 1);
-		}
-	}
+	else
+		displayTitles = options.columns;
 
 	// append the header row
 	var headers = thead.append("tr")
@@ -94,58 +98,17 @@ function tabulate(data, options, columns) {
 			return "_header" + titleColumns[i];
 		})
 		.text(function (column) { return column; })
-		.on('click', function (d, i) {
-			d = titleColumns[i];
-			headers.attr('class', 'header');
-			if (sortAscending) {
-				rows.sort(function (a, b) {
-					if (isNaN(a[d])) {
-						return d3.ascending(a[d], b[d]);
-					}
-					else {
-						return b[d] - a[d];
-					}
-				});
-				sortAscending = false;
-				this.className = 'asc';
-			} else {
-				rows.sort(function (a, b) {
-					if (isNaN(a[d])) {
-						return d3.descending(a[d], b[d]);
-					}
-					else {
-						return a[d] - b[d];
-					}
-				});
-				sortAscending = true;
-				this.className = 'desc';
-			}
-		});
+		.on('click', onColumnHeaderClick);
 
 	// create a row for each object in the data
 	var rows = tbody.selectAll("tr")
 		.data(data)
 		.enter()
 		.append("tr")
-		.attr("class", function (d) {
-			var classes = d["_Style"] ?? "";
-			if ((d[options.thresholdCols.high] &&
-				d[options.thresholdCols.value] > d[options.thresholdCols.high]) ||
-				(d[options.thresholdCols.low] &&
-				d[options.thresholdCols.value] < d[options.thresholdCols.low])) {
-				classes = "errorColor";
-			}
-			else if ((d[options.thresholdCols.high] &&
-				d[options.thresholdCols.value] === d[options.thresholdCols.high]) ||
-				(d[options.thresholdCols.low] &&
-				d[options.thresholdCols.value] === d[options.thresholdCols.low])) {
-				classes = "warningColor";
-			}
-			return classes;
-		});
+		.attr("class", getRowClass);
 
 	// create a cell in each row for each column
-	var cells = rows.selectAll("td")
+	rows.selectAll("td")
 		.data(function (row) {
 			return titleColumns.map(function (column) {
 				return { column: column, value: row[column], highThreshold: row[options.thresholdCols.high], lowThreshold: row[options.thresholdCols.low]};
@@ -153,47 +116,85 @@ function tabulate(data, options, columns) {
 		})
 		.enter()
 		.append("td")
-		.html(function (d) {
-			if (d.column === "_Link") {
-				return '<a href="http://' + d.value + '">' + d.value + '</a>';
-			}
-			else if (d.column === options.thresholdCols.value) {
-				var thresholdString = "";
-				if (d.highThreshold) {
-					thresholdString = 'Upper threshold: ' + d.highThreshold;
-				}
-
-				if (d.lowThreshold) {
-					if (thresholdString)
-						thresholdString += " ";
-					thresholdString += 'Lower threshold: ' + d.lowThreshold;
-				}
-				return '<span title=\'' + thresholdString + '\'>' + d.value+'</span>';
-			}
-			else {
-				return d.value;
-			}
-		})
+		.html(getCellContents)
 		.classed('largeText', function (d) {
-			if (d.column === options.thresholdCols.value) {
+			if (d.column === options.thresholdCols.value)
 				return true;
-			}
-			else {
+			else
 				return false;;
-			}
-		})
-		.classed('centerAlign', function (d) {
-
-			if (!isNaN(d.value)) {
-				return true;
-			}
-			return false;
 		})
 		.classed('tableCell', true)
 		.attr('data-th', function (d) {
 			return d.name;
 		});
 	return table;
+
+	function getCellContents(cellData) {
+		if (cellData.column === options.thresholdCols.value) {
+			var thresholdString = "";
+			if (cellData.highThreshold) {
+				thresholdString = 'Upper threshold: ' + cellData.highThreshold;
+			}
+
+			if (cellData.lowThreshold) {
+				if (thresholdString)
+					thresholdString += " ";
+				thresholdString += 'Lower threshold: ' + cellData.lowThreshold;
+			}
+			return '<span title=\'' + thresholdString + '\'>' + cellData.value + '</span>';
+		}
+		else {
+			return cellData.value;
+		}
+	}
+
+	function getRowClass(row) {
+		{
+			var classes = row["_Style"] ?? "";
+			if ((row[options.thresholdCols.high] &&
+				row[options.thresholdCols.value] > row[options.thresholdCols.high]) ||
+				(row[options.thresholdCols.low] &&
+				row[options.thresholdCols.value] < row[options.thresholdCols.low])) {
+				classes = "errorColor";
+			}
+			else if ((row[options.thresholdCols.high] &&
+				row[options.thresholdCols.value] === row[options.thresholdCols.high]) ||
+				(row[options.thresholdCols.low] &&
+				row[options.thresholdCols.value] === row[options.thresholdCols.low])) {
+				classes = "warningColor";
+			}
+			return classes;
+		}
+	}
+
+	function onColumnHeaderClick(d, i) {
+		d = titleColumns[i];
+		headers.attr('class', 'header');
+		if (sortAscending) {
+			rows.sort(function (a, b) {
+
+				if (isNaN(a[d]))
+					return d3.ascending(a[d], b[d]);
+				else
+					return b[d] - a[d];
+
+			});
+			sortAscending = false;
+			this.className = 'asc';
+		} else {
+			rows.sort(function (a, b) {
+				if (isNaN(a[d])) {
+					return d3.descending(a[d], b[d]);
+				}
+				else {
+					return a[d] - b[d];
+				}
+			});
+
+			sortAscending = true;
+			this.className = 'desc';
+		}
+	}
 }
 ;// CONCATENATED MODULE: ./src/modules/census-board.js
 
